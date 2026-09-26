@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Estudio Visual · Calendario y Paletas</title>
+
+<style>
+:root{
+  --bg:#f4f2ee;
+  --panel:#ffffff;
+  --text:#1a1825;
+  --muted:#726d6a;
+  --line:#e2ded7;
+  --accent:#4338ca;
+  --accent2:#ff5a3c;
+  --radius:18px;
+  --font-display:Georgia,serif;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#141218;
+    --panel:#1c1a22;
+    --text:#f2f0ec;
+    --muted:#a39d9a;
+    --line:#2e2a35;
+  }
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+header{
+  padding:18px 20px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--text);
+}
+
+header h1{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-weight:600;
+  font-size:19px;
+  margin:0;
+  color:var(--bg);
+}
+
+header span{
+  font-size:11px;
+  color:var(--accent2);
+  font-weight:600;
+}
+
+nav{
+  display:flex;
+  gap:2px;
+  padding:0 12px;
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+
+nav button{
+  border:none;
+  background:transparent;
+  color:var(--muted);
+  padding:13px 14px 11px;
+  font-size:13.5px;
+  cursor:pointer;
+  border-bottom:2.5px solid transparent;
+}
+
+nav button.active{
+  color:var(--text);
+  border-bottom-color:var(--accent2);
+  font-weight:600;
+}
+
+main{
+  max-width:700px;
+  margin:0 auto;
+  padding:18px;
+}
+
+.view{
+  display:none;
+}
+
+.view.active{
+  display:block;
+}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:12px;
+}
+
+/* =========================
+   CALENDARIO
+========================= */
+
+.calnav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  font-weight:600;
+  font-size:15px;
+  font-family:var(--font-display);
+  font-style:italic;
+}
+
+.calgrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+
+.calhead{
+  font-size:10px;
+  color:var(--muted);
+  text-align:center;
+  padding-bottom:4px;
+}
+
+.calday{
+  min-height:60px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding:4px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.calday:hover{
+  border-color:var(--accent);
+}
+
+.calday.other{
+  opacity:.3;
+}
+
+.calday.selected{
+  border-color:var(--accent);
+  background:rgba(67,56,202,.08);
+}
+
+.calday.today{
+  font-weight:700;
+  color:var(--accent);
+}
+
+.caldots{
+  display:flex;
+  gap:2px;
+  margin-top:3px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.caldot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+}
+
+.row{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.row>*{
+  flex:1;
+}
+
+input,
+textarea{
+  background:var(--panel);
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:12px;
+  padding:11px 12px;
+  font-size:14px;
+  font-family:inherit;
+  width:100%;
+}
+
+input:focus,
+textarea:focus{
+  outline:none;
+  border-color:var(--accent);
+}
+
+button.send{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  padding:10px 18px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+button.send:hover{
+  opacity:.9;
+}
+
+button.ghost{
+  background:transparent;
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:10px;
+  padding:8px 12px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+button.ghost:hover{
+  background:var(--line);
+}
+
+.dproj{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  margin-bottom:6px;
+  cursor:pointer;
+}
+
+.dproj .dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  flex:none;
+}
+
+.dproj .info{
+  flex:1;
+  min-width:0;
+}
+
+.dproj .info strong{
+  display:block;
+  font-size:13px;
+}
+
+.dproj .info span{
+  font-size:11px;
+  color:var(--muted);
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.colorsw{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  cursor:pointer;
+  border:2px solid transparent;
+}
+
+.colorsw.active{
+  border-color:var(--text);
+}
+
+.empty{
+  color:var(--muted);
+  font-size:13px;
+  text-align:center;
+  padding:20px 0;
+}
+
+/* =========================
+   PALETAS
+========================= */
+
+.famchip{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  background:var(--panel);
+  border:1.5px solid var(--line);
+  color:var(--text);
+  border-radius:999px;
+  padding:7px 14px 7px 7px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+.famchip:hover{
+  border-color:var(--accent);
+}
+
+.famchip.active{
+  border-color:var(--accent);
+  background:rgba(67,56,202,.08);
+}
+
+.famchip .dot{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  flex:none;
+}
+
+#colorfams{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.swatches{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(56px,1fr));
+  gap:6px;
+  margin:12px 0;
+}
+
+.swatch{
+  height:56px;
+  border-radius:8px;
+  display:flex;
+  align-items:flex-end;
+  padding:4px;
+  font-size:9px;
+  color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.4);
+  cursor:pointer;
+}
+
+.swatch:hover{
+  transform:scale(1.03);
+}
+
+@media(max-width:500px){
+
+  header{
+    padding:15px;
+  }
+
+  header span{
+    display:none;
+  }
+
+  nav{
+    overflow-x:auto;
+  }
+
+  main{
+    padding:12px;
+  }
+
+  .calday{
+    min-height:48px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎨 Estudio Visual</h1>
+  <span>Calendario · Paletas</span>
+</header>
+
+<nav>
+  <button data-view="proyectos" class="active">
+    Calendario
+  </button>
+
+  <button data-view="paleta">
+    Paletas
+  </button>
+</nav>
+
+<main>
+
+<!-- =========================
+     CALENDARIO
+========================= -->
+
+<section id="proyectos" class="view active">
+
+  <div class="panel">
+
+    <div class="calnav">
+
+      <button class="ghost" id="calPrev">
+        ‹
+      </button>
+
+      <span id="calLabel"></span>
+
+      <button class="ghost" id="calNext">
+        ›
+      </button>
+
+    </div>
+
+    <div class="calgrid" id="calGrid"></div>
+
+    <button
+      class="ghost"
+      id="calToday"
+      style="margin-top:12px;width:100%"
+    >
+      Ir a hoy
+    </button>
+
+  </div>
+
+
+  <div class="panel">
+
+    <div
+      id="dayTitle"
+      style="
+        font-weight:600;
+        margin-bottom:10px;
+        font-size:16px;
+        font-family:var(--font-display);
+        font-style:italic
+      "
+    ></div>
+
+    <div
+      id="dayProjList"
+      style="margin-bottom:12px"
+    ></div>
+
+    <div class="row">
+      <input
+        id="projname"
+        placeholder="Nombre del proyecto"
+      >
+    </div>
+
+    <div class="row">
+      <textarea
+        id="projnotes"
+        placeholder="Notas (opcional)"
+        rows="2"
+      ></textarea>
+    </div>
+
+    <div
+      id="colorpicker"
+      style="
+        display:flex;
+        gap:8px;
+        margin-bottom:12px
+      "
+    ></div>
+
+    <button
+      class="send"
+      id="projadd"
+      style="width:100%"
+    >
+      Añadir a este día
+    </button>
+
+    <button
+      class="ghost"
+      id="projcancel"
+      style="
+        width:100%;
+        margin-top:8px;
+        display:none
+      "
+    >
+      Cancelar edición
+    </button>
+
+  </div>
+
+
+  <div class="panel">
+
+    <div
+      style="
+        font-weight:600;
+        margin-bottom:10px;
+        font-size:14px
+      "
+    >
+      Próximos proyectos
+    </div>
+
+    <div id="upcomingList"></div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     PALETAS
+========================= -->
+
+<section id="paleta" class="view">
+
+  <div class="panel">
+
+    <p
+      style="
+        font-size:12px;
+        color:var(--muted);
+        margin-top:0
+      "
+    >
+      Elige una familia de color:
+    </p>
+
+    <div id="colorfams"></div>
+
+    <div
+      class="swatches"
+      id="swatches"
+    ></div>
+
+    <p
+      style="
+        font-size:12px;
+        color:var(--muted)
+      "
+    >
+      Toca un color para copiar su código HEX.
+    </p>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<script>
+
+/* =========================
+   NAVEGACIÓN
+========================= */
+
+document.querySelectorAll('nav button').forEach(button => {
+
+  button.addEventListener('click', () => {
+
+    document
+      .querySelectorAll('nav button')
+      .forEach(x => x.classList.remove('active'));
+
+    document
+      .querySelectorAll('.view')
+      .forEach(x => x.classList.remove('active'));
+
+    button.classList.add('active');
+
+    document
+      .getElementById(button.dataset.view)
+      .classList.add('active');
+
+  });
+
+});
+
+
+/* =========================
+   PALETAS
+========================= */
+
+function hslToHex(h,s,l){
+
+  s /= 100;
+  l /= 100;
+
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l,1-l);
+
+  const f = n =>
+    l - a * Math.max(
+      -1,
+      Math.min(
+        k(n)-3,
+        Math.min(9-k(n),1)
+      )
+    );
+
+  const toHex = x =>
+    Math.round(255*x)
+      .toString(16)
+      .padStart(2,'0');
+
+  return '#' +
+    toHex(f(0)) +
+    toHex(f(8)) +
+    toHex(f(4));
+}
+
+
+const FAMILIES = [
+
+  {name:'Rojos',hue:355},
+
+  {name:'Naranjas',hue:28},
+
+  {name:'Amarillos',hue:50},
+
+  {name:'Verdes',hue:130},
+
+  {name:'Azules',hue:210},
+
+  {name:'Morados',hue:270},
+
+  {name:'Rosas',hue:325},
+
+  {name:'Tierra',hue:30,earth:true},
+
+  {name:'Neutros',hue:0,neutral:true}
+
+];
+
+
+function genFamilyPalette(f){
+
+  if(f.neutral){
+
+    const steps = 10;
+
+    return Array.from(
+      {length:steps},
+      (_,i) =>
+        hslToHex(
+          0,
+          0,
+          8 + i * (88/(steps-1))
+        )
+    );
+
+  }
+
+
+  if(f.earth){
+
+    const steps = 9;
+
+    return Array.from(
+      {length:steps},
+      (_,i) =>
+        hslToHex(
+          f.hue + (i%2 ? -6 : 6),
+          25 + (i%3)*12,
+          20 + i*(60/(steps-1))
+        )
+    );
+
+  }
+
+
+  const steps = 10;
+
+  return Array.from(
+    {length:steps},
+    (_,i) => {
+
+      const l = 12 + i*(78/(steps-1));
+
+      const s =
+        85 - Math.abs(l-50)*0.5;
+
+      return hslToHex(
+        f.hue,
+        s,
+        l
+      );
+
+    }
+  );
+
+}
+
+
+function renderFamilyChips(activeIdx){
+
+  const box =
+    document.getElementById('colorfams');
+
+  box.innerHTML = '';
+
+  FAMILIES.forEach((f,i) => {
+
+    const button =
+      document.createElement('button');
+
+    button.className =
+      'famchip' +
+      (i === activeIdx ? ' active' : '');
+
+    const preview =
+      f.neutral
+        ? hslToHex(0,0,55)
+        : hslToHex(
+            f.hue,
+            f.earth ? 40 : 70,
+            f.earth ? 45 : 50
+          );
+
+    button.innerHTML =
+      '<span class="dot" style="background:' +
+      preview +
+      '"></span>' +
+      f.name;
+
+    button.addEventListener(
+      'click',
+      () => {
+
+        renderSwatches(
+          genFamilyPalette(f)
+        );
+
+        renderFamilyChips(i);
+
+      }
+    );
+
+    box.appendChild(button);
+
+  });
+
+}
+
+
+function renderSwatches(colors){
+
+  const box =
+    document.getElementById('swatches');
+
+  box.innerHTML = '';
+
+  colors.forEach(color => {
+
+    const swatch =
+      document.createElement('div');
+
+    swatch.className = 'swatch';
+
+    swatch.style.background = color;
+
+    swatch.textContent = color;
+
+    swatch.addEventListener(
+      'click',
+      async () => {
+
+        try{
+
+          await navigator.clipboard.writeText(color);
+
+          swatch.textContent = '¡Copiado!';
+
+          setTimeout(
+            () => swatch.textContent = color,
+            800
+          );
+
+        }catch(e){
+
+          swatch.textContent = color;
+
+        }
+
+      }
+    );
+
+    box.appendChild(swatch);
+
+  });
+
+}
+
+
+renderFamilyChips(4);
+
+renderSwatches(
+  genFamilyPalette(FAMILIES[4])
+);
+
+
+/* =========================
+   CALENDARIO
+========================= */
+
+const PKEY =
+  'estudio_visual_proyectos_v2';
+
+
+const PCOLORS = [
+  '#7c5cff',
+  '#ff7a59',
+  '#2fbf71',
+  '#3aa0ff',
+  '#ffbe3d',
+  '#ff5c8a'
+];
+
+
+function loadProj(){
+
+  try{
+
+    return JSON.parse(
+      localStorage.getItem(PKEY) || '[]'
+    );
+
+  }catch(e){
+
+    return [];
+
+  }
+
+}
+
+
+function saveProj(list){
+
+  try{
+
+    localStorage.setItem(
+      PKEY,
+      JSON.stringify(list)
+    );
+
+  }catch(e){}
+
+}
+
+
+function toISO(date){
+
+  return (
+    date.getFullYear() +
+    '-' +
+    String(date.getMonth()+1).padStart(2,'0') +
+    '-' +
+    String(date.getDate()).padStart(2,'0')
+  );
+
+}
+
+
+let calDate = new Date();
+
+calDate.setDate(1);
+
+let selectedDate =
+  toISO(new Date());
+
+let selectedColor =
+  PCOLORS[0];
+
+let editingId = null;
+
+
+const MESES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre'
+];
+
+
+const DIAS = [
+  'L',
+  'M',
+  'X',
+  'J',
+  'V',
+  'S',
+  'D'
+];
+
+
+function renderColorPicker(){
+
+  const box =
+    document.getElementById('colorpicker');
+
+  box.innerHTML = '';
+
+  PCOLORS.forEach(color => {
+
+    const swatch =
+      document.createElement('div');
+
+    swatch.className =
+      'colorsw' +
+      (color === selectedColor
+        ? ' active'
+        : '');
+
+    swatch.style.background = color;
+
+    swatch.addEventListener(
+      'click',
+      () => {
+
+        selectedColor = color;
+
+        renderColorPicker();
+
+      }
+    );
+
+    box.appendChild(swatch);
+
+  });
+
+}
+
+
+function renderCalendar(){
+
+  const grid =
+    document.getElementById('calGrid');
+
+  grid.innerHTML = '';
+
+  document.getElementById(
+    'calLabel'
+  ).textContent =
+    MESES[calDate.getMonth()] +
+    ' ' +
+    calDate.getFullYear();
+
+
+  DIAS.forEach(day => {
+
+    const head =
+      document.createElement('div');
+
+    head.className = 'calhead';
+
+    head.textContent = day;
+
+    grid.appendChild(head);
+
+  });
+
+
+  const first =
+    new Date(
+      calDate.getFullYear(),
+      calDate.getMonth(),
+      1
+    );
+
+
+  const startOffset =
+    (first.getDay()+6)%7;
+
+
+  const daysInMonth =
+    new Date(
+      calDate.getFullYear(),
+      calDate.getMonth()+1,
+      0
+    ).getDate();
+
+
+  const projects = loadProj();
+
+  const todayISO =
+    toISO(new Date());
+
+
+  const totalCells =
+    Math.ceil(
+      (startOffset + daysInMonth) / 7
+    ) * 7;
+
+
+  for(let i=0;i<totalCells;i++){
+
+    const dayNum =
+      i - startOffset + 1;
+
+
+    const cellDate =
+      new Date(
+        calDate.getFullYear(),
+        calDate.getMonth(),
+        dayNum
+      );
+
+
+    const iso =
+      toISO(cellDate);
+
+
+    const cell =
+      document.createElement('div');
+
+
+    cell.className =
+      'calday' +
+      (
+        dayNum < 1 ||
+        dayNum > daysInMonth
+          ? ' other'
+          : ''
+      );
+
+
+    if(iso === todayISO){
+
+      cell.classList.add('today');
+
+    }
+
+
+    if(iso === selectedDate){
+
+      cell.classList.add('selected');
+
+    }
+
+
+    cell.textContent =
+      cellDate.getDate();
+
+
+    const dayProjects =
+      projects.filter(
+        p => p.date === iso
+      );
+
+
+    if(dayProjects.length === 1){
+
+      cell.style.background =
+        'color-mix(in srgb, ' +
+        dayProjects[0].color +
+        ' 16%, var(--panel))';
+
+    }
+
+
+    if(dayProjects.length){
+
+      const dots =
+        document.createElement('div');
+
+      dots.className =
+        'caldots';
+
+
+      dayProjects
+        .slice(0,4)
+        .forEach(project => {
+
+          const dot =
+            document.createElement('div');
+
+          dot.className =
+            'caldot';
+
+          dot.style.background =
+            project.color;
+
+          dots.appendChild(dot);
+
+        });
+
+
+      cell.appendChild(dots);
+
+    }
+
+
+    cell.addEventListener(
+      'click',
+      () => {
+
+        selectedDate = iso;
+
+        cancelEdit();
+
+        renderCalendar();
+
+        renderDayList();
+
+      }
+    );
+
+
+    grid.appendChild(cell);
+
+  }
+
+
+  renderUpcoming();
+
+}
+
+
+function renderUpcoming(){
+
+  const box =
+    document.getElementById(
+      'upcomingList'
+    );
+
+  const todayISO =
+    toISO(new Date());
+
+
+  const list =
+    loadProj()
+      .filter(
+        p => p.date >= todayISO
+      )
+      .sort(
+        (a,b) =>
+          a.date.localeCompare(b.date)
+      )
+      .slice(0,5);
+
+
+  box.innerHTML =
+    list.length
+      ? ''
+      : '<div class="empty">No hay proyectos próximos.</div>';
+
+
+  list.forEach(project => {
+
+    const date =
+      new Date(
+        project.date + 'T00:00:00'
+      );
+
+
+    const row =
+      document.createElement('div');
+
+    row.className = 'dproj';
+
+
+    row.innerHTML =
+      '<div class="dot" style="background:' +
+      project.color +
+      '"></div>' +
+
+      '<div class="info">' +
+
+      '<strong>' +
+      escapeHTML(project.name) +
+      '</strong>' +
+
+      '<span>' +
+      date.getDate() +
+      ' de ' +
+      MESES[date.getMonth()] +
+      '</span>' +
+
+      '</div>';
+
+
+    row.addEventListener(
+      'click',
+      () => {
+
+        calDate =
+          new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            1
+          );
+
+        selectedDate =
+          project.date;
+
+        cancelEdit();
+
+        renderCalendar();
+
+        renderDayList();
+
+      }
+    );
+
+
+    box.appendChild(row);
+
+  });
+
+}
+
+
+function renderDayList(){
+
+  const list =
+    loadProj().filter(
+      p => p.date === selectedDate
+    );
+
+
+  const date =
+    new Date(
+      selectedDate + 'T00:00:00'
+    );
+
+
+  document.getElementById(
+    'dayTitle'
+  ).textContent =
+    'Proyectos · ' +
+    date.getDate() +
+    ' de ' +
+    MESES[date.getMonth()] +
+    ' de ' +
+    date.getFullYear();
+
+
+  const box =
+    document.getElementById(
+      'dayProjList'
+    );
+
+
+  box.innerHTML =
+    list.length
+      ? ''
+      : '<div class="empty">Sin proyectos este día.</div>';
+
+
+  list.forEach(project => {
+
+    const row =
+      document.createElement('div');
+
+    row.className = 'dproj';
+
+
+    row.innerHTML =
+      '<div class="dot" style="background:' +
+      project.color +
+      '"></div>' +
+
+      '<div class="info">' +
+
+      '<strong>' +
+      escapeHTML(project.name) +
+      '</strong>' +
+
+      '<span>' +
+      escapeHTML(project.notes || '') +
+      '</span>' +
+
+      '</div>';
+
+
+    const del =
+      document.createElement('button');
+
+    del.className = 'ghost';
+
+    del.textContent = '🗑';
+
+
+    del.addEventListener(
+      'click',
+      event => {
+
+        event.stopPropagation();
+
+        const newList =
+          loadProj().filter(
+            x => x.id !== project.id
+          );
+
+        saveProj(newList);
+
+        renderCalendar();
+
+        renderDayList();
+
+      }
+    );
+
+
+    row.appendChild(del);
+
+
+    row.addEventListener(
+      'click',
+      () => startEdit(project)
+    );
+
+
+    box.appendChild(row);
+
+  });
+
+}
+
+
+function startEdit(project){
+
+  editingId = project.id;
+
+  document.getElementById(
+    'projname'
+  ).value = project.name;
+
+
+  document.getElementById(
+    'projnotes'
+  ).value = project.notes || '';
+
+
+  selectedColor =
+    project.color;
+
+
+  renderColorPicker();
+
+
+  document.getElementById(
+    'projadd'
+  ).textContent =
+    'Guardar cambios';
+
+
+  document.getElementById(
+    'projcancel'
+  ).style.display =
+    'block';
+
+}
+
+
+function cancelEdit(){
+
+  editingId = null;
+
+  document.getElementById(
+    'projname'
+  ).value = '';
+
+  document.getElementById(
+    'projnotes'
+  ).value = '';
+
+  selectedColor =
+    PCOLORS[0];
+
+  renderColorPicker();
+
+
+  document.getElementById(
+    'projadd'
+  ).textContent =
+    'Añadir a este día';
+
+
+  document.getElementById(
+    'projcancel'
+  ).style.display =
+    'none';
+
+}
+
+
+document.getElementById(
+  'projcancel'
+).addEventListener(
+  'click',
+  cancelEdit
+);
+
+
+document.getElementById(
+  'projadd'
+).addEventListener(
+  'click',
+  () => {
+
+    const name =
+      document.getElementById(
+        'projname'
+      ).value.trim();
+
+
+    if(!name) return;
+
+
+    const notes =
+      document.getElementById(
+        'projnotes'
+      ).value.trim();
+
+
+    let list = loadProj();
+
+
+    if(editingId){
+
+      list =
+        list.map(
+          project =>
+            project.id === editingId
+              ? {
+                  ...project,
+                  name,
+                  notes,
+                  color:selectedColor
+                }
+              : project
+        );
+
+    }else{
+
+      list.unshift({
+
+        id:
+          crypto.randomUUID
+            ? crypto.randomUUID()
+            : String(Date.now()),
+
+        name,
+
+        notes,
+
+        color:selectedColor,
+
+        date:selectedDate
+
+      });
+
+    }
+
+
+    saveProj(list);
+
+    cancelEdit();
+
+    renderCalendar();
+
+    renderDayList();
+
+  }
+);
+
+
+document.getElementById(
+  'calPrev'
+).addEventListener(
+  'click',
+  () => {
+
+    calDate.setMonth(
+      calDate.getMonth()-1
+    );
+
+    renderCalendar();
+
+  }
+);
+
+
+document.getElementById(
+  'calNext'
+).addEventListener(
+  'click',
+  () => {
+
+    calDate.setMonth(
+      calDate.getMonth()+1
+    );
+
+    renderCalendar();
+
+  }
+);
+
+
+document.getElementById(
+  'calToday'
+).addEventListener(
+  'click',
+  () => {
+
+    calDate = new Date();
+
+    calDate.setDate(1);
+
+    selectedDate =
+      toISO(new Date());
+
+    cancelEdit();
+
+    renderCalendar();
+
+    renderDayList();
+
+  }
+);
+
+
+/* =========================
+   SEGURIDAD PARA TEXTO
+========================= */
+
+function escapeHTML(text){
+
+  const div =
+    document.createElement('div');
+
+  div.textContent =
+    text;
+
+  return div.innerHTML;
+
+}
+
+
+/* =========================
+   INICIO
+========================= */
+
+renderColorPicker();
+
+renderCalendar();
+
+renderDayList();
+
+</script>
+
+</body>
+</html>
+
