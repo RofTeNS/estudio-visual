@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<!--
+  IMPORTANTE:
+  Este archivo funciona completo (chat con IA, imágenes, paso a paso, historial)
+  SOLO cuando se abre desde su enlace publicado en claude.ai:
+  https://claude.ai/artifact/ESYCHSw58UbEKJwf22pmxq
+
+  Si lo abres localmente (doble clic, Live Server, VS Code, etc.) la IA
+  no responderá porque esa conexión no existe fuera de claude.ai.
+  Sí funcionan sin conexión: Paletas (modo aleatorio) y Proyectos (guardado local).
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estudio Visual · IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root{--font-display:'Fraunces',Georgia,serif;}
+:root{
+  --bg:#f4f2ee;--panel:#ffffff;--text:#1a1825;--muted:#726d6a;--line:#e2ded7;
+  --accent:#4338ca;--accent2:#ff5a3c;--radius:18px;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#141218;--panel:#1c1a22;--text:#f2f0ec;--muted:#a39d9a;--line:#2e2a35;}
+}
+:root[data-theme="dark"]{--bg:#141218;--panel:#1c1a22;--text:#f2f0ec;--muted:#a39d9a;--line:#2e2a35;}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--text);flex:none}
+header h1{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:19px;margin:0;color:var(--bg);letter-spacing:.2px}
+header span{font-size:11px;color:var(--accent2);font-weight:600}
+nav{display:flex;gap:2px;padding:0 12px;border-bottom:1px solid var(--line);overflow-x:auto;background:var(--panel);flex:none}
+nav button{border:none;background:transparent;color:var(--muted);padding:13px 14px 11px;font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;transition:.15s}
+nav button.active{color:var(--text);border-bottom-color:var(--accent2);font-weight:600}
+main{flex:1;overflow:hidden;min-height:0}
+.view{display:none;max-width:640px;margin:0 auto;height:100%;overflow-y:auto;padding:18px}
+.view.active{display:block}
+#chat.view.active{display:flex;flex-direction:column}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+/* Chat */
+#chatlog{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;flex:1;overflow-y:auto;min-height:0}
+.msg{padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.45;max-width:85%}
+.msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:4px}
+.inputrow{display:flex;gap:8px;flex:none;padding-top:4px}
+input,textarea{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px 12px;font-size:14px;font-family:inherit;width:100%;transition:.15s}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+button.send{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+button.send:hover{opacity:.9}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;transition:.15s}
+button.ghost:hover{background:var(--line)}
+/* Palette */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px;margin:12px 0}
+.swatch{height:56px;border-radius:8px;display:flex;align-items:flex-end;padding:4px;font-size:9px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);cursor:pointer}
+/* Projects */
+.proj{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+.proj h3{margin:0 0 4px;font-size:14px}
+.proj p{margin:0;font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.row>*{flex:1}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0}
+.setting{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.setting:last-child{border-bottom:none}
+.setting div strong{display:block;font-size:14px}
+.setting div span{font-size:12px;color:var(--muted)}
+.toggle{position:relative;width:42px;height:24px;flex:none}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:var(--line);border-radius:999px;cursor:pointer;transition:.2s}
+.toggle .slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.slider{background:var(--accent)}
+.toggle input:checked+.slider:before{transform:translateX(18px)}
+.codeblock{background:#111114;color:#e8e8e8;border-radius:10px;padding:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;overflow-x:auto;margin:6px 0;white-space:pre-wrap}
+.coderun{display:flex;gap:8px;align-items:center;margin:4px 0 10px}
+.codeout{background:#0c0c0f;color:#8fe28f;border-radius:8px;padding:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;display:none}
+.attachbtn{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:0 12px;font-size:16px;cursor:pointer}
+#imgpreview{display:none;align-items:center;gap:8px;margin-bottom:8px}
+#imgpreview img{width:48px;height:48px;object-fit:cover;border-radius:8px}
+#imgpreview button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px}
+.stepbtn{margin-top:6px;font-size:12px}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.famchip{display:flex;align-items:center;gap:7px;background:var(--panel);border:1.5px solid var(--line);color:var(--text);border-radius:999px;padding:7px 14px 7px 7px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
+.famchip .dot{width:22px;height:22px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.famchip:hover{border-color:var(--accent)}
+.famchip.active{border-color:var(--accent);background:rgba(67,56,202,.08)}
+.calnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:600;font-size:15px;font-family:var(--font-display);font-style:italic}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calhead{font-size:10px;color:var(--muted);text-align:center;padding-bottom:4px}
+.calday{aspect-ratio:1;border-radius:8px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px;font-size:12px;cursor:pointer}
+.calday.other{opacity:.3}
+.calday.selected{border-color:var(--accent);background:rgba(67,56,202,.08)}
+.calday.today{font-weight:700;color:var(--accent)}
+.caldots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center}
+.caldot{width:6px;height:6px;border-radius:50%}
+.colorsw{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.colorsw.active{border-color:var(--text)}
+.dproj{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:pointer}
+.dproj .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.dproj .info{flex:1;min-width:0}
+.dproj .info strong{display:block;font-size:13px}
+.dproj .info span{font-size:11px;color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
+<body>
+<header><h1>🎨 Estudio Visual</h1><span>Privado · solo tú</span></header>
+<nav>
+  <button data-view="proyectos">Calendario</button>
+  <button data-view="chat" class="active">Asistente</button>
+  <button data-view="paleta">Paletas</button>
+  <button data-view="multimedia">Multimedia</button>
+  <button data-view="ajustes">Ajustes</button>
+</nav>
+<main>
+  <section id="chat" class="view active">
+    <div id="chatlog"></div>
+    <div id="suggestions" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+    <div id="imgpreview"><img id="imgpreviewimg"/><span>Imagen adjunta</span><button id="imgremove">Quitar ✕</button></div>
+    <div class="inputrow">
+      <button class="attachbtn" id="attachbtn" title="Adjuntar imagen">📎</button>
+      <input type="file" id="fileinput" accept="image/*" style="display:none">
+      <input id="chatinput" placeholder="Pregúntame sobre diseño, composición, tendencias..." />
+      <button class="send" id="chatsend">Enviar</button>
+    </div>
+  </section>
+
+  <section id="paleta" class="view">
+    <div class="panel">
+      <p style="font-size:12px;color:var(--muted);margin-top:0">Elige una familia de color:</p>
+      <div id="colorfams" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+      <div class="swatches" id="swatches"></div>
+      <p style="font-size:12px;color:var(--muted)">Toca un color para copiar su código HEX.</p>
+    </div>
+  </section>
+
+  <section id="proyectos" class="view">
+    <div class="panel calwrap">
+      <div class="calnav">
+        <button class="ghost" id="calPrev">‹</button>
+        <span id="calLabel"></span>
+        <button class="ghost" id="calNext">›</button>
+      </div>
+      <div class="calgrid" id="calGrid"></div>
+      <button class="ghost" id="calToday" style="margin-top:12px;width:100%">Ir a hoy</button>
+      <button class="ghost" id="weekAlert" style="margin-top:8px;width:100%">🔔 Avisar si hay algo esta semana</button>
+      <div id="alertBox" style="display:none;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--accent2);background:color-mix(in srgb, var(--accent2) 10%, var(--panel));font-size:13px"></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <div id="dayTitle" style="font-weight:600;margin-bottom:10px;font-size:16px;font-family:var(--font-display);font-style:italic"></div>
+      <div id="dayProjList" style="margin-bottom:12px"></div>
+      <div class="row"><input id="projname" placeholder="Nombre del proyecto"/></div>
+      <div class="row"><textarea id="projnotes" placeholder="Notas (opcional)" rows="2"></textarea></div>
+      <div id="colorpicker" style="display:flex;gap:8px;margin-bottom:12px"></div>
+      <button class="send" id="projadd" style="width:100%">Añadir a este día</button>
+      <button class="ghost" id="projcancel" style="width:100%;margin-top:8px;display:none">Cancelar edición</button>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <div style="font-weight:600;margin-bottom:10px;font-size:14px">Próximos proyectos</div>
+      <div id="upcomingList"></div>
+    </div>
+  </section>
+
+  <section id="multimedia" class="view">
+    <div class="panel">
+      <div class="setting">
+        <div><strong>Adjuntar imágenes en el chat</strong><span>Permite subir una foto y preguntar sobre ella</span></div>
+        <label class="toggle"><input type="checkbox" id="togImg"><span class="slider"></span></label>
+      </div>
+      <div class="setting" style="border-bottom:none">
+        <div><strong>Botón "paso a paso"</strong><span>Muestra la opción de explicación simplificada bajo cada respuesta</span></div>
+        <label class="toggle"><input type="checkbox" id="togStep"><span class="slider"></span></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="ajustes" class="view">
+    <div class="panel">
+      <div class="setting">
+        <div><strong>Guardar conversaciones</strong><span>Recuerda tu historial de chat en este dispositivo</span></div>
+        <label class="toggle"><input type="checkbox" id="togSave"><span class="slider"></span></label>
+      </div>
+      <div class="setting">
+        <div><strong>Modo código</strong><span>El asistente puede escribir y ejecutar JavaScript</span></div>
+        <label class="toggle"><input type="checkbox" id="togCode"><span class="slider"></span></label>
+      </div>
+      <div class="setting" style="border-bottom:none">
+        <div><strong>Borrar historial de chat</strong><span>Elimina las conversaciones guardadas</span></div>
+        <button class="ghost" id="clearChat">Borrar</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// ---- nav ----
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); document.getElementById(b.dataset.view).classList.add('active');
+}));
+
+// ---- sample capability ----
+let sample=null;
+(async()=>{ try{ sample = await window.claude?.use?.('sample'); }catch(e){ sample=null; } })();
+
+// ---- ajustes ----
+const SETT_KEY='estudio_visual_settings', HIST_KEY='estudio_visual_chat_history';
+function loadSettings(){ try{ return Object.assign({saveChat:false,codeMode:false,allowImages:true,autoStep:true}, JSON.parse(localStorage.getItem(SETT_KEY)||'{}')); }catch(e){ return {saveChat:false,codeMode:false,allowImages:true,autoStep:true}; } }
+function saveSettings(s){ try{ localStorage.setItem(SETT_KEY, JSON.stringify(s)); }catch(e){} }
+let settings = loadSettings();
+document.getElementById('togSave').checked = settings.saveChat;
+document.getElementById('togCode').checked = settings.codeMode;
+document.getElementById('togSave').addEventListener('change',e=>{ settings.saveChat=e.target.checked; saveSettings(settings); if(!settings.saveChat){ try{localStorage.removeItem(HIST_KEY);}catch(err){} } });
+document.getElementById('togCode').addEventListener('change',e=>{ settings.codeMode=e.target.checked; saveSettings(settings); });
+document.getElementById('togImg').checked = settings.allowImages;
+document.getElementById('togStep').checked = settings.autoStep;
+document.getElementById('togImg').addEventListener('change',e=>{ settings.allowImages=e.target.checked; saveSettings(settings); document.getElementById('attachbtn').style.display = (imagesSupported && settings.allowImages) ? 'inline-block' : 'none'; });
+document.getElementById('togStep').addEventListener('change',e=>{ settings.autoStep=e.target.checked; saveSettings(settings); });
+document.getElementById('clearChat').addEventListener('click',()=>{ try{localStorage.removeItem(HIST_KEY);}catch(e){} log.innerHTML=''; renderSuggestions(); });
+
+// ---- chat ----
+const log=document.getElementById('chatlog');
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); }catch(e){ return []; } }
+function persistHistory(list){ if(!settings.saveChat) return; try{ localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(-40))); }catch(e){} }
+let history = settings.saveChat ? loadHistory() : [];
+
+function renderCodeBlocks(container, text){
+  const parts = text.split(/```(?:js|javascript)?\n?([\s\S]*?)```/g);
+  container.innerHTML='';
+  parts.forEach((part,i)=>{
+    if(i%2===0){ if(part.trim()){ const p=document.createElement('div'); p.textContent=part; container.appendChild(p); } }
+    else {
+      const pre=document.createElement('div'); pre.className='codeblock'; pre.textContent=part.trim(); container.appendChild(pre);
+      if(settings.codeMode){
+        const row=document.createElement('div'); row.className='coderun';
+        const btn=document.createElement('button'); btn.className='ghost'; btn.textContent='▶ Ejecutar';
+        const out=document.createElement('div'); out.className='codeout';
+        btn.addEventListener('click',()=>{
+          const logs=[]; const origLog=console.log;
+          console.log=(...a)=>{ logs.push(a.map(String).join(' ')); };
+          try{ const r = new Function(part); const ret = r();
+            if(ret!==undefined) logs.push('→ '+String(ret));
+            out.textContent = logs.length? logs.join('\n') : '(ejecutado, sin salida)';
+          }catch(err){ out.textContent = 'Error: '+err.message; }
+          console.log=origLog; out.style.display='block';
+        });
+        row.appendChild(btn); container.appendChild(row); container.appendChild(out);
+      }
+    }
+  });
+}
+function addMsg(text,cls){
+  const d=document.createElement('div'); d.className='msg '+cls;
+  if(cls==='ai') renderCodeBlocks(d,text); else d.textContent=text;
+  log.appendChild(d); log.scrollTop=log.scrollHeight; return d;
+}
+const SUGGESTIONS=[
+  '¿Qué combinación de colores funciona bien para una marca minimalista?',
+  'Explícame qué es la regla de los tercios',
+  '¿Qué tendencias de diseño visual hay ahora mismo?',
+  'Escribe una función en código que genere un patrón geométrico'
+];
+function renderSuggestions(){
+  const box=document.getElementById('suggestions');
+  if(log.children.length>0){ box.style.display='none'; return; }
+  box.style.display='flex'; box.innerHTML='';
+  SUGGESTIONS.forEach(s=>{
+    const c=document.createElement('button'); c.className='chip'; c.textContent=s;
+    c.addEventListener('click',()=>{ document.getElementById('chatinput').value=s; sendChat(); });
+    box.appendChild(c);
+  });
+}
+(function initHistory(){ history.forEach(m=>addMsg(m.text,m.role)); renderSuggestions(); })();
+
+// ---- imagen adjunta ----
+let attachedImage=null, imagesSupported=false;
+(async()=>{ try{ const lim = await sample?.limits?.(); imagesSupported = !!(lim && lim.images); }catch(e){ imagesSupported=false; }
+  document.getElementById('attachbtn').style.display = (imagesSupported && settings.allowImages) ? 'inline-block' : 'none';
+})();
+document.getElementById('attachbtn').addEventListener('click',()=>document.getElementById('fileinput').click());
+document.getElementById('fileinput').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    attachedImage = {media_type:f.type, data: reader.result.split(',')[1]};
+    document.getElementById('imgpreviewimg').src=reader.result;
+    document.getElementById('imgpreview').style.display='flex';
+  };
+  reader.readAsDataURL(f);
+});
+document.getElementById('imgremove').addEventListener('click',()=>{ attachedImage=null; document.getElementById('imgpreview').style.display='none'; document.getElementById('fileinput').value=''; });
+
+function addStepButton(bubble, originalAnswer){
+  const b=document.createElement('button'); b.className='ghost stepbtn'; b.textContent='🔍 Explícamelo paso a paso';
+  b.addEventListener('click',async()=>{
+    b.remove();
+    const box=document.createElement('div'); box.className='msg ai'; log.appendChild(box); box.textContent='Pensando...'; log.scrollTop=log.scrollHeight;
+    if(!sample){ box.textContent='El asistente IA solo funciona desde el enlace publicado: https://claude.ai/artifact/ESYCHSw58UbEKJwf22pmxq'; return; }
+    try{
+      await sample('Explica lo siguiente de forma más simple y en pasos numerados, muy claros, como si la persona no hubiera entendido bien la primera vez:\n\n'+originalAnswer, {
+        onText:({text})=>{ renderCodeBlocks(box,text); log.scrollTop=log.scrollHeight; }
+      });
+      history.push({role:'ai',text:box.textContent}); persistHistory(history);
+    }catch(e){ box.textContent='No se pudo generar la explicación.'; }
+  });
+  bubble.appendChild(b);
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chatinput'); const text=inp.value.trim(); if(!text && !attachedImage) return;
+  addMsg(text || '(imagen enviada)','user'); history.push({role:'user',text:text||'(imagen enviada)'}); persistHistory(history); renderSuggestions();
+  if(!sample){ addMsg('El asistente IA solo funciona desde el enlace publicado: https://claude.ai/artifact/ESYCHSw58UbEKJwf22pmxq (aquí en local no responde).','ai'); return; }
+  const bubble=addMsg('Pensando...','ai');
+  let sysPrompt='Eres un asistente de IA general: puedes responder cualquier pregunta que el usuario no sepa (de cualquier tema), explicar conceptos, ayudar a resolver dudas, y también dar apoyo creativo de diseño visual (color, composición, tendencias) cuando se solicite. Responde en español, de forma clara y útil.';
+  if(settings.codeMode) sysPrompt += ' Si es útil, puedes escribir código JavaScript en bloques ```js para que el usuario lo ejecute.';
+  let input;
+  if(attachedImage){
+    input = [{role:'user', content:[
+      {type:'image', source:{type:'base64', media_type:attachedImage.media_type, data:attachedImage.data}},
+      {type:'text', text: sysPrompt+'\n\nPregunta sobre la imagen: '+(text||'Analiza esta imagen y dame tu opinión de diseño.')}
+    ]}];
+  } else {
+    input = sysPrompt+'\n\nPregunta: '+text;
+  }
+  const imgUsed = attachedImage; attachedImage=null; document.getElementById('imgpreview').style.display='none'; document.getElementById('fileinput').value='';
+  inp.value='';
+  try{
+    await sample(input, { onText:({text})=>{ renderCodeBlocks(bubble,text); log.scrollTop=log.scrollHeight; } });
+    const finalText = bubble.textContent;
+    history.push({role:'ai',text:finalText}); persistHistory(history);
+    if(settings.autoStep) addStepButton(bubble, finalText);
+  }catch(e){ bubble.textContent='No se pudo obtener respuesta ahora mismo.'; }
+}
+document.getElementById('chatsend').addEventListener('click',sendChat);
+document.getElementById('chatinput').addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+// ---- paletas por familia de color ----
+function hsl(h,s,l){ return 'hsl('+Math.round(h)+','+Math.round(s)+'%,'+Math.round(l)+'%)'; }
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const toHex=x=>Math.round(255*x).toString(16).padStart(2,'0');
+  return '#'+toHex(f(0))+toHex(f(8))+toHex(f(4));
+}
+const FAMILIES=[
+  {name:'Rojos',hue:355},{name:'Naranjas',hue:28},{name:'Amarillos',hue:50},
+  {name:'Verdes',hue:130},{name:'Azules',hue:210},{name:'Morados',hue:270},
+  {name:'Rosas',hue:325},{name:'Tierra',hue:30,earth:true},{name:'Neutros',hue:0,neutral:true}
+];
+function genFamilyPalette(f){
+  if(f.neutral){ const steps=10; return Array.from({length:steps},(_,i)=>hslToHex(0,0,8+i*(88/(steps-1)))); }
+  if(f.earth){ const steps=9; return Array.from({length:steps},(_,i)=>hslToHex(f.hue+ (i%2? -6:6), 25+ (i%3)*12, 20+i*(60/(steps-1)))); }
+  const steps=10;
+  return Array.from({length:steps},(_,i)=>{
+    const l=12+i*(78/(steps-1));
+    const s=85-Math.abs(l-50)*0.5;
+    return hslToHex(f.hue,s,l);
+  });
+}
+function renderFamilyChips(activeIdx){
+  const box=document.getElementById('colorfams'); box.innerHTML='';
+  FAMILIES.forEach((f,i)=>{
+    const c=document.createElement('button'); c.className='famchip'+(i===activeIdx?' active':'');
+    const preview = f.neutral ? hslToHex(0,0,55) : hslToHex(f.hue, f.earth?40:70, f.earth?45:50);
+    c.innerHTML='<span class="dot" style="background:'+preview+'"></span>'+f.name;
+    c.addEventListener('click',()=>{ renderSwatches(genFamilyPalette(f)); renderFamilyChips(i); });
+    box.appendChild(c);
+  });
+}
+function renderSwatches(colors){
+  const box=document.getElementById('swatches'); box.innerHTML='';
+  colors.forEach(c=>{
+    const s=document.createElement('div'); s.className='swatch'; s.style.background=c; s.textContent=c;
+    s.addEventListener('click',()=>{ navigator.clipboard?.writeText(c).catch(()=>{}); s.textContent='Copiado!'; setTimeout(()=>s.textContent=c,800); });
+    box.appendChild(s);
+  });
+}
+renderFamilyChips(4);
+renderSwatches(genFamilyPalette(FAMILIES[4]));
+
+// ---- proyectos (calendario personalizable, localStorage) ----
+const PKEY='estudio_visual_proyectos_v2';
+const PCOLORS=['#7c5cff','#ff7a59','#2fbf71','#3aa0ff','#ffbe3d','#ff5c8a'];
+function loadProj(){ try{ return JSON.parse(localStorage.getItem(PKEY)||'[]'); }catch(e){ return []; } }
+function saveProj(list){ try{ localStorage.setItem(PKEY, JSON.stringify(list)); }catch(e){} }
+function toISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+let calDate=new Date(); calDate.setDate(1);
+let selectedDate=toISO(new Date());
+let selectedColor=PCOLORS[0], editingId=null;
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS=['L','M','X','J','V','S','D'];
+
+function renderColorPicker(){
+  const box=document.getElementById('colorpicker'); box.innerHTML='';
+  PCOLORS.forEach(c=>{
+    const s=document.createElement('div'); s.className='colorsw'+(c===selectedColor?' active':''); s.style.background=c;
+    s.addEventListener('click',()=>{ selectedColor=c; renderColorPicker(); });
+    box.appendChild(s);
+  });
+}
+function renderCalendar(){
+  const grid=document.getElementById('calGrid'); grid.innerHTML='';
+  document.getElementById('calLabel').textContent = MESES[calDate.getMonth()]+' '+calDate.getFullYear();
+  DIAS.forEach(d=>{ const h=document.createElement('div'); h.className='calhead'; h.textContent=d; grid.appendChild(h); });
+  const first=new Date(calDate.getFullYear(),calDate.getMonth(),1);
+  const startOffset=(first.getDay()+6)%7; // lunes=0
+  const daysInMonth=new Date(calDate.getFullYear(),calDate.getMonth()+1,0).getDate();
+  const projects=loadProj(); const todayISO=toISO(new Date());
+  const totalCells=Math.ceil((startOffset+daysInMonth)/7)*7;
+  for(let i=0;i<totalCells;i++){
+    const dayNum=i-startOffset+1;
+    const cellDate=new Date(calDate.getFullYear(),calDate.getMonth(),dayNum);
+    const iso=toISO(cellDate);
+    const cell=document.createElement('div'); cell.className='calday'+((dayNum<1||dayNum>daysInMonth)?' other':'');
+    if(iso===todayISO) cell.classList.add('today');
+    if(iso===selectedDate) cell.classList.add('selected');
+    cell.textContent=cellDate.getDate();
+    const dayProjs=projects.filter(p=>p.date===iso);
+    if(dayProjs.length===1){ cell.style.background='color-mix(in srgb, '+dayProjs[0].color+' 16%, var(--panel))'; }
+    if(dayProjs.length){
+      const dots=document.createElement('div'); dots.className='caldots';
+      dayProjs.slice(0,4).forEach(p=>{ const dt=document.createElement('div'); dt.className='caldot'; dt.style.background=p.color; dots.appendChild(dt); });
+      cell.appendChild(dots);
+    }
+    cell.addEventListener('click',()=>{ selectedDate=iso; cancelEdit(); renderCalendar(); renderDayList(); });
+    grid.appendChild(cell);
+  }
+  renderUpcoming();
+}
+function renderUpcoming(){
+  const box=document.getElementById('upcomingList'); if(!box) return;
+  const todayISO=toISO(new Date());
+  const list=loadProj().filter(p=>p.date>=todayISO).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5);
+  box.innerHTML = list.length? '' : '<div class="empty">No hay proyectos próximos.</div>';
+  list.forEach(p=>{
+    const d=new Date(p.date+'T00:00:00');
+    const row=document.createElement('div'); row.className='dproj';
+    row.innerHTML='<div class="dot" style="background:'+p.color+'"></div><div class="info"><strong>'+p.name+'</strong><span>'+d.getDate()+' de '+MESES[d.getMonth()]+'</span></div>';
+    row.addEventListener('click',()=>{ calDate=new Date(d.getFullYear(),d.getMonth(),1); selectedDate=p.date; cancelEdit(); renderCalendar(); renderDayList(); });
+    box.appendChild(row);
+  });
+}
+function renderDayList(){
+  const list=loadProj().filter(p=>p.date===selectedDate);
+  const d=new Date(selectedDate+'T00:00:00');
+  document.getElementById('dayTitle').textContent = 'Proyectos · '+d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear();
+  const box=document.getElementById('dayProjList');
+  box.innerHTML = list.length? '' : '<div class="empty">Sin proyectos este día.</div>';
+  list.forEach(p=>{
+    const row=document.createElement('div'); row.className='dproj';
+    row.innerHTML='<div class="dot" style="background:'+p.color+'"></div><div class="info"><strong>'+p.name+'</strong><span>'+(p.notes||'')+'</span></div>';
+    const del=document.createElement('button'); del.className='ghost'; del.textContent='🗑';
+    del.addEventListener('click',ev=>{ ev.stopPropagation(); const l=loadProj().filter(x=>x.id!==p.id); saveProj(l); renderCalendar(); renderDayList(); });
+    row.appendChild(del);
+    row.addEventListener('click',()=>{ startEdit(p); });
+    box.appendChild(row);
+  });
+}
+function startEdit(p){
+  editingId=p.id; document.getElementById('projname').value=p.name; document.getElementById('projnotes').value=p.notes||'';
+  selectedColor=p.color; renderColorPicker();
+  document.getElementById('projadd').textContent='Guardar cambios'; document.getElementById('projcancel').style.display='block';
+}
+function cancelEdit(){
+  editingId=null; document.getElementById('projname').value=''; document.getElementById('projnotes').value='';
+  selectedColor=PCOLORS[0]; renderColorPicker();
+  document.getElementById('projadd').textContent='Añadir a este día'; document.getElementById('projcancel').style.display='none';
+}
+document.getElementById('projcancel').addEventListener('click',cancelEdit);
+document.getElementById('projadd').addEventListener('click',()=>{
+  const name=document.getElementById('projname').value.trim(); if(!name) return;
+  const notes=document.getElementById('projnotes').value.trim();
+  let list=loadProj();
+  if(editingId){ list=list.map(p=>p.id===editingId?{...p,name,notes,color:selectedColor}:p); }
+  else { list.unshift({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),name,notes,color:selectedColor,date:selectedDate}); }
+  saveProj(list); cancelEdit(); renderCalendar(); renderDayList();
+});
+document.getElementById('calPrev').addEventListener('click',()=>{ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); });
+document.getElementById('calNext').addEventListener('click',()=>{ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); });
+document.getElementById('calToday').addEventListener('click',()=>{ calDate=new Date(); calDate.setDate(1); selectedDate=toISO(new Date()); cancelEdit(); renderCalendar(); renderDayList(); });
+document.getElementById('weekAlert').addEventListener('click',()=>{
+  const today=new Date(); today.setHours(0,0,0,0);
+  const in7=new Date(today); in7.setDate(in7.getDate()+7);
+  const list=loadProj().filter(p=>{ const d=new Date(p.date+'T00:00:00'); return d>=today && d<=in7; }).sort((a,b)=>a.date.localeCompare(b.date));
+  const box=document.getElementById('alertBox'); box.style.display='block';
+  if(!list.length){ box.textContent='Nada en los próximos 7 días. Todo tranquilo 🙂'; return; }
+  box.innerHTML = '<strong>Tienes '+list.length+' proyecto(s) esta semana:</strong><br>'+list.map(p=>{
+    const d=new Date(p.date+'T00:00:00'); return '• '+p.name+' — '+d.getDate()+' de '+MESES[d.getMonth()];
+  }).join('<br>');
+  if('Notification' in window){
+    if(Notification.permission==='granted'){ new Notification('Estudio Visual', {body: list.length+' proyecto(s) esta semana'}); }
+    else if(Notification.permission!=='denied'){ Notification.requestPermission().then(p=>{ if(p==='granted') new Notification('Estudio Visual', {body: list.length+' proyecto(s) esta semana'}); }); }
+  }
+});
+renderColorPicker(); renderCalendar(); renderDayList();
+</script>
+</body>
+</html>
